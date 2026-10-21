@@ -1,5 +1,93 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model IEnumerable<internegprogramcılıgıproje.Models.Question>
+
 @{
+    ViewData["Title"] = "Sorular";
+    var categories = ViewBag.Categories as IEnumerable<internegprogramcılıgıproje.Models.Category>;
+    int? currentCat = ViewBag.CurrentCategory;
+    string? search = ViewBag.Search;
 }
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2 class="fw-bold">Tüm Sorular</h2>
+        <p class="text-muted">Topluluğun sorduğu güncel soruları keşfet veya kendi sorunu sor.</p>
+    </div>
+    <div class="col-md-4 text-md-end d-flex align-items-center justify-content-md-end">
+        <a asp-action="Create" class="btn btn-primary px-4 py-2 fw-semibold">+ Yeni Soru Sor</a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Sol Taraf: Filtreleme & Kategoriler -->
+    <div class="col-md-3 mb-4">
+        <div class="card shadow-sm border-0 mb-3">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">Soru Ara</h6>
+                <form asp-action="Index" method="get">
+                    <input type="hidden" name="categoryId" value="@currentCat" />
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control form-control-sm" placeholder="Anahtar kelime..." value="@search" />
+                        <button class="btn btn-outline-secondary btn-sm" type="submit">Ara</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="list-group shadow-sm border-0">
+            <a asp-action="Index" asp-route-search="@search" class="list-group-item list-group-item-action @(currentCat == null ? "active" : "")">
+                Tüm Kategoriler
+            </a>
+            @if (categories != null)
+            {
+                foreach (var cat in categories)
+                {
+                    <a asp-action="Index" asp-route-categoryId="@cat.Id" asp-route-search="@search" class="list-group-item list-group-item-action @(currentCat == cat.Id ? "active" : "")">
+                        @cat.Name
+                    </a>
+                }
+            }
+        </div>
+    </div>
+
+    <!-- Sağ Taraf: Soru Kartları -->
+    <div class="col-md-9">
+        @if (!Model.Any())
+        {
+            <div class="alert alert-info border-0 shadow-sm">
+                Aramanıza veya seçilen kategoriye uygun soru bulunamadı. İlk soruyu siz sorabilirsiniz!
+            </div>
+        }
+        else
+        {
+            foreach (var q in Model)
+            {
+                <div class="card mb-3 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-secondary">@q.Category?.Name</span>
+                            <small class="text-muted">@q.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</small>
+                        </div>
+                        <h5 class="card-title fw-bold">
+                            <a asp-action="Details" asp-route-id="@q.Id" class="text-decoration-none text-dark">
+                                @q.Title
+                            </a>
+                        </h5>
+                        <p class="card-text text-secondary text-truncate" style="max-height: 48px;">
+                            @q.Content
+                        </p>
+                        <hr class="my-2" />
+                        <div class="d-flex justify-content-between align-items-center small text-muted">
+                            <div>
+                                Soran: <strong class="text-dark">@(q.User?.FullName ?? q.User?.UserName)</strong>
+                            </div>
+                            <div>
+                                <span class="me-3">👁️ @q.ViewCount Görüntülenme</span>
+                                <span class="badge bg-primary text-white">💬 @(q.Answers?.Count ?? 0) Cevap</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>

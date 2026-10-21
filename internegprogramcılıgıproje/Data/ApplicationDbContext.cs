@@ -59,6 +59,31 @@ namespace internegprogramcılıgıproje.Data
                     CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 }
             );
+
+            // Başlangıç Kategorileri (Seed Data)
+            modelBuilder.Entity<Category>().HasData(
+                new Category
+                {
+                    Id = 1,
+                    Name = "Yazılım & Programlama",
+                    Description = "Kodlama, diller ve kütüphaneler",
+                    IsActive = true
+                },
+                new Category
+                {
+                    Id = 2,
+                    Name = "Veritabanı",
+                    Description = "SQL, NoSQL, ORM araçları",
+                    IsActive = true
+                },
+                new Category
+                {
+                    Id = 3,
+                    Name = "Web Geliştirme",
+                    Description = "Frontend, Backend ve API mimarileri",
+                    IsActive = true
+                }
+            );
         }
     }
 }
