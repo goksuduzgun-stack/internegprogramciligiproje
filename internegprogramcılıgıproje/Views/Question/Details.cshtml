@@ -1,4 +1,4 @@
-﻿@model internegprogramcılıgıproje.Models.Question
+@model internegprogramcılıgıproje.Models.Question
 
 @{
     ViewData["Title"] = Model.Title;
@@ -30,44 +30,53 @@
         </div>
 
         <!-- Cevaplar Listesi -->
-        <h4 class="fw-bold mb-3">Cevaplar (@(Model.Answers?.Count ?? 0))</h4>
+        <h4 class="fw-bold mb-3">Cevaplar (<span id="answerCount">@(Model.Answers?.Count ?? 0)</span>)</h4>
 
-        @if (Model.Answers != null && Model.Answers.Any())
-        {
-            foreach (var answer in Model.Answers.OrderBy(a => a.CreatedAt))
+        <div id="answersList">
+            @if (Model.Answers != null && Model.Answers.Any())
             {
-                <div class="card shadow-sm border-0 mb-3 bg-light">
-                    <div class="card-body p-3">
-                        <p class="card-text mb-2 text-dark" style="white-space: pre-line;">@answer.Content</p>
-                        <div class="d-flex justify-content-between align-items-center text-muted small">
-                            <span>Cevaplayan: <strong class="text-dark">@(answer.User?.FullName ?? answer.User?.UserName)</strong></span>
-                            <span>@answer.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</span>
+                foreach (var answer in Model.Answers.OrderBy(a => a.CreatedAt))
+                {
+                    <div class="card shadow-sm border-0 mb-3 bg-light">
+                        <div class="card-body p-3">
+                            <p class="card-text mb-2 text-dark" style="white-space: pre-line;">@answer.Content</p>
+                            <div class="d-flex justify-content-between align-items-center text-muted small">
+                                <span>Cevaplayan: <strong class="text-dark">@(answer.User?.FullName ?? answer.User?.UserName)</strong></span>
+                                <span>@answer.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</span>
+                            </div>
                         </div>
                     </div>
+                }
+            }
+            else
+            {
+                <div class="alert alert-light border text-muted" id="noAnswerAlert">
+                    Henüz bu soruya cevap yazılmamış. İlk cevabı sen yaz!
                 </div>
             }
-        }
-        else
-        {
-            <div class="alert alert-light border text-muted">
-                Henüz bu soruya cevap yazılmamış. İlk cevabı sen yaz!
-            </div>
-        }
+        </div>
 
-        <!-- Cevap Yazma Formu -->
+        <!-- AJAX Cevap Yazma Formu -->
         <div class="card shadow-sm border-0 mt-4">
             <div class="card-body p-4">
                 <h5 class="fw-bold mb-3">Cevabını Paylaş</h5>
 
                 @if (User.Identity?.IsAuthenticated ?? false)
                 {
-                    <form asp-action="AddAnswer" method="post">
-                        <input type="hidden" name="QuestionId" value="@Model.Id" />
-                        <div class="mb-3">
-                            <textarea name="Content" class="form-control" rows="4" placeholder="Cevabınızı buraya yazınız..." required minlength="5"></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-success px-4">Cevabı Gönder</button>
-                    </form>
+                    <!-- Başarı/Hata Mesajı -->
+                    <div id="ajaxMessage" class="d-none mb-3"></div>
+
+                    <div class="mb-3">
+                        <textarea id="answerContent" class="form-control" rows="4" placeholder="Cevabınızı buraya yazınız... (en az 5 karakter)" minlength="5"></textarea>
+                        <div id="charCount" class="form-text text-muted mt-1">0 karakter</div>
+                    </div>
+                    <button type="button" id="btnSubmitAnswer" class="btn btn-success px-4">
+                        <i class="fas fa-paper-plane me-1"></i> Cevabı Gönder
+                    </button>
+                    <span id="loadingSpinner" class="d-none ms-2">
+                        <span class="spinner-border spinner-border-sm text-success" role="status"></span>
+                        Gönderiliyor...
+                    </span>
                 }
                 else
                 {
@@ -79,3 +88,118 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Karakter sayacı
+            $('#answerContent').on('input', function () {
+                var len = $(this).val().length;
+                $('#charCount').text(len + ' karakter');
+                if (len >= 5) {
+                    $('#charCount').removeClass('text-danger').addClass('text-muted');
+                } else {
+                    $('#charCount').removeClass('text-muted').addClass('text-danger');
+                }
+            });
+
+            // AJAX Cevap Gönderme
+            $('#btnSubmitAnswer').on('click', function () {
+                var content = $('#answerContent').val().trim();
+
+                if (content.length < 5) {
+                    showMessage('danger', 'Cevap en az 5 karakter olmalıdır.');
+                    return;
+                }
+
+                // Butonu devre dışı bırak
+                $('#btnSubmitAnswer').prop('disabled', true);
+                $('#loadingSpinner').removeClass('d-none');
+
+                $.ajax({
+                    url: '/Question/AddAnswerAjax',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        questionId: @Model.Id,
+                        content: content
+                    }),
+                    success: function (response) {
+                        if (response.success) {
+                            // "Henüz cevap yok" uyarısını kaldır
+                            $('#noAnswerAlert').remove();
+
+                            // Yeni cevabı listeye ekle
+                            var newAnswer = `
+                                <div class="card shadow-sm border-0 mb-3 bg-light answer-new" style="animation: fadeIn 0.5s;">
+                                    <div class="card-body p-3">
+                                        <p class="card-text mb-2 text-dark" style="white-space: pre-line;">${escapeHtml(response.answer.content)}</p>
+                                        <div class="d-flex justify-content-between align-items-center text-muted small">
+                                            <span>Cevaplayan: <strong class="text-dark">${escapeHtml(response.answer.fullname)}</strong></span>
+                                            <span>${response.answer.createdDate}</span>
+                                        </div>
+                                    </div>
+                                </div>`;
+
+                            $('#answersList').append(newAnswer);
+
+                            // Cevap sayısını güncelle
+                            var currentCount = parseInt($('#answerCount').text()) || 0;
+                            $('#answerCount').text(currentCount + 1);
+
+                            // Formu temizle
+                            $('#answerContent').val('');
+                            $('#charCount').text('0 karakter');
+
+                            showMessage('success', response.message);
+
+                            // Yeni cevaba scroll
+                            $('html, body').animate({
+                                scrollTop: $('#answersList .card:last').offset().top - 100
+                            }, 500);
+                        } else {
+                            showMessage('danger', response.message);
+                        }
+                    },
+                    error: function (xhr) {
+                        if (xhr.status === 401) {
+                            showMessage('warning', 'Oturumunuz sona ermiş. Lütfen tekrar giriş yapın.');
+                        } else {
+                            showMessage('danger', 'Bir hata oluştu. Lütfen tekrar deneyin.');
+                        }
+                    },
+                    complete: function () {
+                        $('#btnSubmitAnswer').prop('disabled', false);
+                        $('#loadingSpinner').addClass('d-none');
+                    }
+                });
+            });
+
+            function showMessage(type, message) {
+                var icon = type === 'success' ? 'check-circle' : (type === 'danger' ? 'exclamation-circle' : 'exclamation-triangle');
+                $('#ajaxMessage')
+                    .removeClass('d-none alert-success alert-danger alert-warning')
+                    .addClass('alert alert-' + type)
+                    .html('<i class="fas fa-' + icon + ' me-1"></i> ' + message);
+
+                // 5 saniye sonra mesajı gizle
+                setTimeout(function () {
+                    $('#ajaxMessage').addClass('d-none');
+                }, 5000);
+            }
+
+            function escapeHtml(text) {
+                var div = document.createElement('div');
+                div.appendChild(document.createTextNode(text));
+                return div.innerHTML;
+            }
+        });
+    </script>
+
+    <style>
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+}

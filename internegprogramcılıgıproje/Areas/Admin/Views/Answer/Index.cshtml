@@ -1,0 +1,72 @@
+@model IEnumerable<internegprogramcılıgıproje.Models.Answer>
+
+@{
+    ViewData["Title"] = "Cevap Yönetimi";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800 font-weight-bold">Cevap Yönetimi</h1>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle mr-1"></i> @TempData["Success"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Tüm Cevaplar (@Model.Count())</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" width="100%" cellspacing="0">
+                <thead class="thead-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Cevap İçeriği</th>
+                        <th>İlgili Soru</th>
+                        <th>Yazan</th>
+                        <th>Tarih</th>
+                        <th class="text-center">İşlem</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var answer in Model)
+                    {
+                        <tr>
+                            <td>@answer.Id</td>
+                            <td style="max-width: 300px;">
+                                @if (answer.Content.Length > 100)
+                                {
+                                    @answer.Content.Substring(0, 100)<text>...</text>
+                                }
+                                else
+                                {
+                                    @answer.Content
+                                }
+                            </td>
+                            <td>
+                                <a asp-area="" asp-controller="Question" asp-action="Details" asp-route-id="@answer.QuestionId" target="_blank" class="text-primary">
+                                    @(answer.Question?.Title ?? "Silinmiş Soru")
+                                </a>
+                            </td>
+                            <td>@(answer.User?.FullName ?? answer.User?.UserName)</td>
+                            <td>@answer.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                            <td class="text-center">
+                                <form asp-action="Delete" asp-route-id="@answer.Id" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-danger"
+                                            onclick="return confirm('Bu cevabı silmek istediğinize emin misiniz?')">
+                                        <i class="fas fa-trash"></i> Sil
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

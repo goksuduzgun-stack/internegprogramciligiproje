@@ -1,8 +1,115 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@model IEnumerable<internegprogramcılıgıproje.Models.Question>
+
+@{
+    ViewData["Title"] = "Ana Sayfa";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<!-- Hero Bölümü -->
+<div class="bg-primary text-white rounded-3 p-5 mb-4 shadow">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h1 class="display-5 fw-bold">Soru – Cevap Portalı</h1>
+            <p class="lead mb-4">Merak ettiğin soruları sor, bildiklerini paylaş. Topluluğun gücüyle her sorunun cevabını bul.</p>
+            <div>
+                @if (User.Identity?.IsAuthenticated ?? false)
+                {
+                    <a asp-controller="Question" asp-action="Create" class="btn btn-light btn-lg fw-semibold me-2">
+                        <i class="fas fa-plus-circle me-1"></i> Soru Sor
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Register" class="btn btn-light btn-lg fw-semibold me-2">
+                        <i class="fas fa-user-plus me-1"></i> Hemen Kayıt Ol
+                    </a>
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-outline-light btn-lg fw-semibold">
+                        Giriş Yap
+                    </a>
+                }
+            </div>
+        </div>
+        <div class="col-md-4 text-center d-none d-md-block">
+            <i class="fas fa-comments fa-6x opacity-50"></i>
+        </div>
+    </div>
 </div>
+
+<!-- İstatistik Kartları -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm text-center h-100">
+            <div class="card-body py-4">
+                <i class="fas fa-question-circle fa-2x text-primary mb-2"></i>
+                <h3 class="fw-bold text-primary">@ViewBag.TotalQuestions</h3>
+                <p class="text-muted mb-0">Toplam Soru</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm text-center h-100">
+            <div class="card-body py-4">
+                <i class="fas fa-comments fa-2x text-success mb-2"></i>
+                <h3 class="fw-bold text-success">@ViewBag.TotalAnswers</h3>
+                <p class="text-muted mb-0">Toplam Cevap</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card border-0 shadow-sm text-center h-100">
+            <div class="card-body py-4">
+                <i class="fas fa-users fa-2x text-info mb-2"></i>
+                <h3 class="fw-bold text-info">@ViewBag.TotalUsers</h3>
+                <p class="text-muted mb-0">Toplam Üye</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Son Eklenen Sorular -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="fw-bold mb-0">Son Eklenen Sorular</h4>
+    <a asp-controller="Question" asp-action="Index" class="btn btn-outline-primary btn-sm">
+        Tüm Soruları Gör <i class="fas fa-arrow-right ms-1"></i>
+    </a>
+</div>
+
+@if (Model != null && Model.Any())
+{
+    foreach (var q in Model)
+    {
+        <div class="card mb-3 shadow-sm border-0">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="badge bg-secondary">@q.Category?.Name</span>
+                    <small class="text-muted">@q.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</small>
+                </div>
+                <h5 class="card-title fw-bold">
+                    <a asp-controller="Question" asp-action="Details" asp-route-id="@q.Id" class="text-decoration-none text-dark">
+                        @q.Title
+                    </a>
+                </h5>
+                <p class="card-text text-secondary text-truncate" style="max-height: 48px;">
+                    @q.Content
+                </p>
+                <hr class="my-2" />
+                <div class="d-flex justify-content-between align-items-center small text-muted">
+                    <div>
+                        Soran: <strong class="text-dark">@(q.User?.FullName ?? q.User?.UserName)</strong>
+                    </div>
+                    <div>
+                        <span class="me-3">👁️ @q.ViewCount</span>
+                        <span class="badge bg-primary text-white">💬 @(q.Answers?.Count ?? 0) Cevap</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+else
+{
+    <div class="alert alert-light border text-center py-4">
+        <i class="fas fa-inbox fa-2x text-muted mb-2 d-block"></i>
+        <p class="text-muted mb-2">Henüz hiç soru sorulmamış.</p>
+        <a asp-controller="Question" asp-action="Create" class="btn btn-primary">İlk Soruyu Sen Sor!</a>
+    </div>
+}

@@ -1,47 +1,66 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>@ViewData["Title"] - SB Admin 2</title>
+    <title>@ViewData["Title"] - Yönetim Paneli</title>
 
-    <!-- Orijinal SB Admin 2 Yerel Dosyaları -->
-    <link href="~/sb-admin-2/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
-    <link href="~/sb-admin-2/css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/startbootstrap-sb-admin-2@4.1.4/css/sb-admin-2.min.css" rel="stylesheet">
 </head>
-
 <body id="page-top">
     <div id="wrapper">
-
         <!-- Sidebar -->
         <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
-
-            <!-- Sidebar - Brand -->
-            <a class="sidebar-brand d-flex align-items-center justify-content-center" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/Admin/Dashboard">
                 <div class="sidebar-brand-icon rotate-n-15">
-                    <i class="fas fa-laugh-wink"></i>
+                    <i class="fas fa-question-circle"></i>
                 </div>
-                <div class="sidebar-brand-text mx-3">SB Admin <sup>2</sup></div>
+                <div class="sidebar-brand-text mx-3">SoruCevap <sup>Admin</sup></div>
             </a>
 
             <hr class="sidebar-divider my-0">
 
-            <li class="nav-item active">
-                <a class="nav-link" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+            <li class="nav-item">
+                <a class="nav-link" href="/Admin/Dashboard">
                     <i class="fas fa-fw fa-tachometer-alt"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
 
             <hr class="sidebar-divider">
-            <div class="sidebar-heading">Yönetim</div>
+            <div class="sidebar-heading">İçerik Yönetimi</div>
 
             <li class="nav-item">
-                <a class="nav-link" asp-area="Admin" asp-controller="Category" asp-action="Index">
+                <a class="nav-link" href="/Admin/Category">
                     <i class="fas fa-fw fa-folder"></i>
                     <span>Kategoriler</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="/Admin/Question">
+                    <i class="fas fa-fw fa-question-circle"></i>
+                    <span>Sorular</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="/Admin/Answer">
+                    <i class="fas fa-fw fa-comments"></i>
+                    <span>Cevaplar</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider">
+            <div class="sidebar-heading">Sistem</div>
+
+            <li class="nav-item">
+                <a class="nav-link" href="/Admin/User">
+                    <i class="fas fa-fw fa-users"></i>
+                    <span>Kullanıcılar</span>
                 </a>
             </li>
 
@@ -49,71 +68,73 @@
             <div class="sidebar-heading">Arayüz</div>
 
             <li class="nav-item">
-                <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index" target="_blank">
+                <a class="nav-link" href="/" target="_blank">
                     <i class="fas fa-fw fa-globe"></i>
                     <span>Siteye Git</span>
                 </a>
             </li>
 
             <hr class="sidebar-divider d-none d-md-block">
-
-            <div class="text-center d-none d-md-inline">
-                <button class="rounded-circle border-0" id="sidebarToggle"></button>
-            </div>
         </ul>
-        <!-- End of Sidebar -->
-        <!-- Content Wrapper -->
+        <!-- End Sidebar -->
+
         <div id="content-wrapper" class="d-flex flex-column">
-
-            <!-- Main Content -->
             <div id="content">
-
                 <!-- Topbar -->
                 <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
-                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
-                        <i class="fa fa-bars"></i>
-                    </button>
-
                     <ul class="navbar-nav ml-auto">
                         <li class="nav-item dropdown no-arrow">
-                            <span class="mr-2 d-none d-lg-inline text-gray-600 small fw-bold">@User.Identity?.Name</span>
+                            <span class="mr-2 d-none d-lg-inline text-gray-600 small font-weight-bold">
+                                <i class="fas fa-user-shield mr-1"></i> @User.Identity?.Name (Admin)
+                            </span>
                         </li>
                         <div class="topbar-divider d-none d-sm-block"></div>
                         <li class="nav-item no-arrow">
-                            <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <form action="/Account/Logout" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-danger shadow-sm">
                                     <i class="fas fa-sign-out-alt fa-sm fa-fw mr-1"></i> Çıkış
                                 </button>
                             </form>
                         </li>
                     </ul>
                 </nav>
-                <!-- End of Topbar -->
-                <!-- Sayfa İçeriği (@RenderBody) -->
+                <!-- End Topbar -->
+
+                <!-- Content -->
                 <div class="container-fluid">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle mr-1"></i> @TempData["Success"]
+                            <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+                        </div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle mr-1"></i> @TempData["Error"]
+                            <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+                        </div>
+                    }
                     @RenderBody()
                 </div>
-
             </div>
-            <!-- End of Main Content -->
-            <!-- Footer -->
+
             <footer class="sticky-footer bg-white">
                 <div class="container my-auto">
                     <div class="copyright text-center my-auto">
-                        <span>Copyright &copy; SoruCevap - SB Admin 2</span>
+                        <span>Copyright &copy; SoruCevap Portalı 2026</span>
                     </div>
                 </div>
             </footer>
         </div>
-        <!-- End of Content Wrapper -->
-
     </div>
 
-    <!-- Orijinal SB Admin 2 Scriptleri -->
-    <script src="~/sb-admin-2/vendor/jquery/jquery.min.js"></script>
-    <script src="~/sb-admin-2/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="~/sb-admin-2/vendor/jquery-easing/jquery.easing.min.js"></script>
-    <script src="~/sb-admin-2/js/sb-admin-2.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/startbootstrap-sb-admin-2@4.1.4/js/sb-admin-2.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -138,6 +138,44 @@ namespace internegprogramcılıgıproje.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Details), new { id = model.QuestionId });
+        }
+
+        // AJAX ile Cevap Ekle (Sayfa yenilemeden)
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> AddAnswerAjax([FromBody] AnswerCreateViewModel model)
+        {
+            if (string.IsNullOrWhiteSpace(model.Content) || model.Content.Length < 5)
+                return Json(new { success = false, message = "Cevap en az 5 karakter olmalıdır." });
+
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdString, out int userId))
+                return Json(new { success = false, message = "Oturum süreniz dolmuş. Lütfen tekrar giriş yapın." });
+
+            var answer = new Answer
+            {
+                QuestionId = model.QuestionId,
+                Content = model.Content,
+                UserId = userId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Answers.Add(answer);
+            await _context.SaveChangesAsync();
+
+            return Json(new
+            {
+                success = true,
+                message = "Cevabınız başarıyla eklendi!",
+                answer = new
+                {
+                    id = answer.Id,
+                    content = answer.Content,
+                    username = User.FindFirstValue(ClaimTypes.Name),
+                    fullname = User.FindFirstValue("FullName") ?? User.FindFirstValue(ClaimTypes.Name),
+                    createdDate = answer.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")
+                }
+            });
         }
     }
 }
